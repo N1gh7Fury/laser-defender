@@ -5,12 +5,14 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
 
     public float speed;
+    public float health = 250f;
     public float padding = 1f;
     float xmin;
     float xmax;
     public GameObject projectile;
     public float projectileSpeed;
     public float firingRate = 0.2f;
+    public AudioClip fireSound;
 
 	// Use this for initialization
 	void Start () {
@@ -45,9 +47,36 @@ public class PlayerController : MonoBehaviour {
         transform.position = new Vector3(newX, transform.position.y, transform.position.z);
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        Projectile missile = collision.gameObject.GetComponent<Projectile>();
+        if (missile)
+        {
+            Debug.Log("player collided with missile");
+
+            health -= missile.GetDamage();
+            missile.Hit();
+            if (health <= 0)
+            {
+                Die();
+            }
+            Debug.Log("Hit by a projectile!");
+        }
+    }
+
+    private void Die()
+    {
+        LevelManager man = GameObject.Find("LevelManager").GetComponent<LevelManager>();
+        Destroy(gameObject);
+        man.LoadLevel("Win Screen");
+        
+    }
+
     void Fire()
     {
-        GameObject beam = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
+        Vector3 offset = new Vector3(0, 1, 0);
+        GameObject beam = Instantiate(projectile, transform.position + offset, Quaternion.identity) as GameObject;
         beam.GetComponent<Rigidbody2D>().velocity = new Vector3(0, projectileSpeed, 0);
+        AudioSource.PlayClipAtPoint(fireSound, transform.position);
     }
 }
